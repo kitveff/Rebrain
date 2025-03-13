@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "20000:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - voting
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "fluentd:24224"
+        fluentd-async: "true"
+        tag: "nginx"
+
+  voting:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./.env.dist:/var/www/html/.env
+    ports:
+      - 9000:9000
+    depends_on:
+      - mysql
+    logging:
+      driver: "fluentd"
+      options:
+         fluentd-address: "fluentd:24224"
+         fluentd-async: "true"
+         tag: "voting"
+
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: voting
+      MYSQL_USER: voting
+      MYSQL_PASSWORD: voting
+      MYSQL_ROOT_PASSWORD: voting
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    logging:
+      driver: "fluentd"
+      options:
+         fluentd-address: "fluentd:24224"
+         fluentd-async: "true"
+         tag: "mysql"
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PORT=6379
+    logging:
+      driver: "fluentd"
+      options:
+         fluentd-address: "fluentd:24224"
+         fluentd-async: "true"
+         tag: "redis"
+
+  elasticsearch:
+    image: elasticsearch:7.17.22
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "fluentd:24224"
+        fluentd-async: "true"
+        tag: "elasticsearch"
+    networks:
+      - efk-network
+
+  fluentd:
+    build: ./fluentd
+    links:
+      - "elasticsearch"
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    environment:
+      - FLUENTD_CONF=fluentd.conf
+    depends_on:
+      - elasticsearch
+    networks:
+      - efk-network
+
+  kibana:
+    image: kibana:7.10.1
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "fluentd:24224"
+        fluentd-async: "true"
+        tag: "kibana"
+    networks:
+      - efk-network
+
+networks:
+  efk-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  elasticsearch-data:

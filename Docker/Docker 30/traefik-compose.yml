@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:latest
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    networks:
+      - voting-network
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  voting-network:
+    driver: overlay

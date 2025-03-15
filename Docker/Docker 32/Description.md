@@ -19,18 +19,30 @@ Elasticsearch ограничен по памяти 1G;
 # Steps:
 
 ```sh
-git checkout -b dkr-38-labels
+git checkout -b dkr-42
 
 git swarm init
 
 docker swarm join --token SWMTKN-1-0kd6wcpseljfzythvnyux3ryfvj2ugq89q4wp0slxyrgrtk2h8-2se67pvueeuylj80f7uclivja 158.160.47.104:2377 на второй и третьей ноде
 
-sudo docker-compose build
+sudo apt-get install apache2-utils
+htpasswd -nbB rebrainme DockerRocks! + Экранировать символ "$" с помощью "$"
+
+vi efk.yml
 vi traefik-compose.yml
-docker network create --driver=overlay --attachable voting-network
-sudo docker stack deploy -c docker-compose.yml traefik
+vi fluentd/Dockerfile
+
+mkdir -p fluentd/conf
+vi fluentd/conf/fluentd.conf
+
+sudo docker build -t custom-fluentd:latest ./fluentd
+
+sudo docker network create --driver=overlay --attachable voting-network
+sudo docker stack deploy -c traefik-compose.yml traefik
+
+sudo docker stack deploy -c efk.yml efk
+
 sudo docker stack deploy -c docker-compose.yml voting-stack
-curl -i http://<IP-адрес-node1>:8080/ping
-curl -i http://<IP-адрес-node2>:8080/ping
-curl -i http://<IP-адрес-node3>:8080/ping
+
+curl -i http://voting.158.160.94.185.nip.io/polls
 ```

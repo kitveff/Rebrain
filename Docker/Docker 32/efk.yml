@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: elasticsearch:7.17.22
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    networks:
+      - efk-net
+
+  fluentd:
+    image: custom-fluentd:latest 
+    links:
+      - "elasticsearch"
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    environment:
+      - FLUENTD_CONF=fluentd.conf
+    deploy:
+      mode: global  # Устанавливаем Fluentd на каждую ноду
+    networks:
+      - efk-net
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+
+  kibana:
+    image: kibana:7.10.1
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.kibana.rule=Host(`kibana.158.160.94.185.nip.io`)"
+        - "traefik.http.services.kibana.loadbalancer.server.port=5601"
+        - "traefik.http.routers.kibana.middlewares=kibana-auth"
+        - "traefik.http.middlewares.kibana-auth.basicauth.users=rebrainme:$$2y$$05$$rWpst/kBh8LJCLUK8OH5au6lU8IjU6ba849AlZxdnMoZrMA5O6/FS"
+    networks:
+      - efk-net
+      - voting-network
+
+volumes:
+  elasticsearch-data:
+
+networks:
+  efk-net:
+    driver: overlay
+  voting-network:
+    external: true

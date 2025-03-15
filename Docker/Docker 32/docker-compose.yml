@@ -7,10 +7,15 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - voting
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "nginx"
     deploy:
       labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nginx.rule=Host(`voting.158.160.61.36.nip.io`) || Host(`voting.158.160.44.115.nip.io`) || Host(`voting.158.160.52.47.nip.io`)"
+      - "traefik.http.routers.nginx.rule=Host(`voting.158.160.94.185.nip.io`) || Host(`voting.158.160.18.199.nip.io`) || Host(`voting.89.169.163.40.nip.io`)"
       - "traefik.http.services.nginx.loadbalancer.server.port=80"
       replicas: 3
     networks:
@@ -24,6 +29,11 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "voting"
     volumes:
       - ./.env.dist:/var/www/html/.env
     ports:
@@ -48,6 +58,11 @@ services:
       - "3306:3306"
     networks:
       - voting-network
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "mysql"
 
   redis:
     image: redis:alpine
@@ -58,11 +73,15 @@ services:
       - REDIS_PORT=6379
     networks:
       - voting-network
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "redis"
 
 volumes:
   mysql-data:
 
 networks:
   voting-network:
-    driver: overlay
     external: true

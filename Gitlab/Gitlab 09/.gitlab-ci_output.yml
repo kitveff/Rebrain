@@ -1,0 +1,32 @@
+variables:
+  CI_REGISTRY_IMAGE: registry.rebrainme.com
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - linter
+  - audit
+  - build
+
+include:
+  - project: 'devops_users_repos/5222/ci-pipeline-templates'
+    ref: main
+    file: 'templates/docker-lint.yml'
+  - project: 'devops_users_repos/5222/ci-pipeline-templates'
+    ref: main
+    file: 'templates/yarn-audit.yml'
+  - project: 'devops_users_repos/5222/ci-pipeline-templates'
+    ref: main
+    file: 'templates/docker-build.yml'
+
+docker-lint-job:
+  extends: .docker-lint
+
+yarn-audit-job:
+  extends: .yarn-audit
+
+build-job:
+  extends: .docker-build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'

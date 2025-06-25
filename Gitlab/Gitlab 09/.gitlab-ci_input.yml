@@ -1,0 +1,34 @@
+variables:
+  CI_REGISTRY_IMAGE: registry.rebrainme.com
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+stages:  
+  - linter # отвечает за проверку Dockerfile на ошибки
+  - audit  # проводит аудит кода проекта на уязвимости      
+  - build  # собирает образ и размещает его в регистре (здесь: регистр Gitlab)
+
+docker-lint-job:   
+   stage: linter           # стадия (из определённых выше)
+   image: docker:24.0.5    # используемый образ
+   services:               # позволяет запустить другой контейнер
+     - name: docker:24.0.5-dind 
+   script:                 # код команды для выполнения
+     - docker run --rm -i ghcr.io/hadolint/hadolint < Dockerfile
+
+yarn-audit-job:
+   stage: audit
+   image: node:16-alpine 
+   script:
+     - yarn install && yarn audit --level high
+   allow_failure: true     # идём дальше, даже если есть ошибки
+
+build-job:       
+  stage: build
+  image: docker:24.0.5  
+  services:
+    - docker:24.0.5-dind
+  script:
+    - echo "${CI_JOB_TOKEN}" | docker login -u gitlab-ci-token --password-stdin ${CI_REGISTRY_IMAGE}
+    - docker build -t ${CI_REGISTRY_IMAGE}/$CI_PROJECT_PATH:$CI_COMMIT_REF_SLUG.$CI_PIPELINE_ID .
+    - docker push ${CI_REGISTRY_IMAGE}/${CI_PROJECT_PATH}:${CI_COMMIT_REF_SLUG}.${CI_PIPELINE_ID}

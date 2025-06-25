@@ -1,0 +1,7 @@
+.docker-lint:
+  stage: linter
+  image: docker:24.0.5
+  services:
+    - name: docker:24.0.5-dind
+  script:
+    - docker run --rm -i ghcr.io/hadolint/hadolint < Dockerfile

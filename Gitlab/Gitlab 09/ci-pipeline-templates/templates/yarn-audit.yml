@@ -1,0 +1,6 @@
+.yarn-audit:
+  stage: audit
+  image: node:16-alpine
+  script:
+    - yarn install && yarn audit --level high
+  allow_failure: true

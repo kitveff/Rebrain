@@ -22,12 +22,12 @@ sudo apt-get install -y gitlab-runner
 
 sudo systemctl enable --now docker
 
-gitlab-runner register  --url https://gitlab.rebrainme.com  --token glrt-y3TxqLsURYMghswsvUvV
+gitlab-runner register  --url https://gitlab.rebrainme.com  --token glrt-Ny2jxBZbyp7r1LHdvbKU
 
 sudo gitlab-runner register \
   --non-interactive \
   --url "https://gitlab.rebrainme.com/" \
-  --registration-token "glrt-y3TxqLsURYMghswsvUvV" \
+  --registration-token "glrt-Ny2jxBZbyp7r1LHdvbKU" \
   --executor "docker" \
   --docker-image "alpine:latest" \
   --description "Docker Runner" \

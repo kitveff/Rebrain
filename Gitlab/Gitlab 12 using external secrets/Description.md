@@ -46,8 +46,6 @@ EOF
 
 gitlab-runner unregister --url https://gitlab.rebrainme.com --token glrt-7yHsKM_PswJcQKv79eqj/gitlab-runner/config.toml
 
-Initial Root Token: hvs.Sm6QWfs6nH26wMGjpprDtvpw
-
 vault operator unseal
 
 Dockerhub token for vault: dckr_pat_5k8iESblyxhy1mngv7ceg2pggJc

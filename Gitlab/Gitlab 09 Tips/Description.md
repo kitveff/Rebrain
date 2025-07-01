@@ -15,6 +15,8 @@
 
 # Steps:
 
+![alt text](image.png)
+
 ```sh
 # Установка GitLab Runner
 curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
@@ -34,15 +36,5 @@ sudo gitlab-runner register \
   --tag-list "docker-privileged" \
   --docker-privileged \
   --docker-volumes "/var/run/docker.sock:/var/run/docker.sock"
-
-  
-# Установка Docker
-sudo apt-get update
-sudo apt-get install -y docker.io
-sudo systemctl enable --now docker
-
-docker pull l4mbada/rebrain:nginx-latest
-
-docker run -p 8080:80 l4mbada/rebrain:nginx-latest
 
 ```

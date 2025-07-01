@@ -1,0 +1,81 @@
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+  CI_DEBUG_TRACE: "false"
+
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .yarn-cache/
+  policy: pull-push
+
+stages:
+  - linter
+  - audit
+  - build
+
+docker-lint-job:
+  stage: linter
+  image: docker:24.0.5
+  services:
+    - name: docker:24.0.5-dind
+      alias: docker
+  before_script:
+    - until docker info >/dev/null 2>&1; do sleep 1; done
+  script:
+    - docker run --rm -i ghcr.io/hadolint/hadolint < Dockerfile
+  cache:
+    policy: pull
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+
+yarn-audit-job:
+  stage: audit
+  image: node:16-alpine
+  variables:
+    YARN_CACHE_FOLDER: "${CI_PROJECT_DIR}/.yarn-cache"
+  script:
+    - yarn install --frozen-lockfile --cache-folder .yarn-cache
+    - yarn audit --level high
+  cache:
+    policy: pull-push
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .yarn-cache/
+  artifacts:
+    when: always
+    paths:
+      - yarn-audit-report.json
+  allow_failure: true
+
+build-job:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - name: docker:24.0.5-dind
+      alias: docker
+  variables:
+    DOCKER_BUILDKIT: 1
+  before_script:
+    - until docker info >/dev/null 2>&1; do sleep 1; done
+  script:
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - >
+      docker build
+      --cache-from ${CI_REGISTRY_IMAGE}/$CI_PROJECT_PATH_SLUG:latest
+      --build-arg BUILDKIT_INLINE_CACHE=1
+      -t ${CI_REGISTRY_IMAGE}/$CI_PROJECT_PATH_SLUG:$CI_COMMIT_REF_SLUG.$CI_PIPELINE_ID
+      -t ${CI_REGISTRY_IMAGE}/$CI_PROJECT_PATH_SLUG:latest
+      .
+    - docker push ${CI_REGISTRY_IMAGE}/$CI_PROJECT_PATH_SLUG:$CI_COMMIT_REF_SLUG.$CI_PIPELINE_ID
+    - docker push ${CI_REGISTRY_IMAGE}/$CI_PROJECT_PATH_SLUG:latest
+  cache:
+    policy: pull
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/

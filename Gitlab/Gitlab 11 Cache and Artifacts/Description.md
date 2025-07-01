@@ -20,18 +20,15 @@ sudo apt-get install -y gitlab-runner
 
 sudo systemctl enable --now docker
 
-gitlab-runner register  --url https://gitlab.rebrainme.com  --token glrt-5AkoGa6PUcHeYqdLRnRX
+sudo gitlab-runner register  --url https://gitlab.rebrainme.com  --token glrt-7yHsKM_PswJcQKv79eqj
 
 sudo gitlab-runner register \
-  --non-interactive \
   --url "https://gitlab.rebrainme.com/" \
-  --registration-token "glrt-5AkoGa6PUcHeYqdLRnRX" \
+  --registration-token "glrt-7yHsKM_PswJcQKv79eqj" \
   --executor "docker" \
   --docker-image "alpine:latest" \
   --description "Docker Runner" \
-  --tag-list "docker-privileged" \
-  --docker-privileged \
-  --docker-volumes "/var/run/docker.sock:/var/run/docker.sock"
+  --docker-privileged
 
   
 # Установка Docker

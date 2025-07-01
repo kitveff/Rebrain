@@ -33,14 +33,8 @@ export VAULT_ADDR='http://127.0.0.1:8200'
 nohup ./script.sh &
 vault operator init
 
-# user@gitlabtask7-hyyys:~$ vault operator init
-# Unseal Key 1: k/Om2lGR4+ntOKaYJHKUl4RrW/4af1jRr1QODbnASXhb
-# Unseal Key 2: DCxlF+2UZuX76mtMFj5vwkv0/A7eqyG4o3fwblxSMPzm
-# Unseal Key 3: utJT5SxRfu5BLqvc4mXCirBTJpX6Gqnn2RVxIghV8vEF
-# Unseal Key 4: d2tgCMM5El6NL/dHToE3pCCii2vv/YvP1fJiOaPfweUv
-# Unseal Key 5: RGok0sgp8RUPekXv2UwhpdXJ4y3afmXBIKT0lsDVFYR4
+user@gitlabtask7-hyyys:~$ vault operator init
 
-# Initial Root Token: hvs.wxirvNLwuZWrLe7ZbJhayGGI
 
 vault policy write myproject - <<EOF
 path "*" {

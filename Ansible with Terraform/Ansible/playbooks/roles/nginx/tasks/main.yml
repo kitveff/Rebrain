@@ -1,0 +1,60 @@
+---
+# tasks file for nginx
+- name: Install Nginx on CentOS
+  ansible.builtin.include_tasks: "install_for_centos.yml"
+  when: ansible_distribution == 'CentOS'
+
+- name: Install Nginx on Ubuntu
+  ansible.builtin.include_tasks: "install_for_ubuntu.yml"
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Run nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Create a directory if it does not exist
+  when: inventory_hostname in groups['app_server']
+  ansible.builtin.file:
+    path: /var/www/html/{{ server_name_1 }}
+    state: directory
+    mode: '0755'
+
+- name: Copy index.html
+  when: inventory_hostname in groups['app_server']
+  ansible.builtin.copy:
+    src: ../files/index.html
+    dest: /var/www/html/{{ server_name_1 }}
+    owner: root
+    group: root
+    mode: '0644'
+  # with_items:
+  #  - "{{ server_name_1 }}"
+  #  - "{{ server_name_2 }}"
+
+- name: Generate main config
+  ansible.builtin.template:
+    src: "nginx.conf.j2"
+    dest: "/etc/nginx/nginx.conf"
+    mode: "755"
+
+- name: Load conf file to 'app_server'
+  when: inventory_hostname in groups['app_server']
+  vars:
+    ssl: false
+  ansible.builtin.template:
+    src: virtualhosts.conf.j2
+    dest: /etc/nginx/conf.d/{{ server_name_1 }}.conf
+    mode: "666"
+
+
+- name: Load conf file to load_balancer
+  when: inventory_hostname in groups['load_balancer']
+  vars:
+    ssl: false
+  ansible.builtin.template:
+    src: loadbalancer.conf.j2
+    dest: /etc/nginx/conf.d/{{ server_name_1 }}.conf
+    mode: "666"
+  notify: Reload nginx

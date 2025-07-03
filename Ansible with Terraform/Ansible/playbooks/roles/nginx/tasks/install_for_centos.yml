@@ -1,0 +1,9 @@
+---
+- name: Add epel-release repo
+  ansible.builtin.yum:
+    name: epel-release
+    state: present
+- name: Install nginx
+  ansible.builtin.yum:
+    name: nginx
+    state: present

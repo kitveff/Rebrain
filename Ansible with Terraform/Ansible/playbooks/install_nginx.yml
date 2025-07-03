@@ -1,0 +1,53 @@
+---
+- name: Nginx
+  hosts: vps
+  roles:
+   - role: 'nginx'
+- name: Certificate
+  hosts: vps
+  roles:
+   - role: 'certificate'
+- name: Ensure public SSH key is exist
+  hosts: localhost
+  tasks:
+   - name: Get stats of a file
+     ansible.builtin.stat:
+      path: "/home/root/.ssh/id_ed25519"
+     register: key_path
+   - name: Create a path if it does not exist
+     when: key_path.stat.path is not defined
+     block:
+      - name: Create a directory if it does not exist
+        ansible.builtin.file:
+         path: "/home/root/.ssh"
+         state: directory
+         mode: '0755'
+      - name: Generate SSH key
+        community.crypto.openssh_keypair:
+         path: "/home/root/.ssh/id_ed25519"
+         type: ed25519
+         owner: root
+         group: root
+        register: key_result
+      - name: Encrypt variable
+        ansible.builtin.command:
+         argv:
+          - ansible-vault
+          - encrypt_string
+          - --vault-password-file ../secrets/secret_pass
+          - '{{ item }}'
+          - --name '{{ item }}'
+          - --output ../group_vars/all
+        loop: 
+        - server_name_1
+        - server_name_2
+        register: my_output # <- Registers the command output.
+        changed_when: my_output.rc != 0 # <- Uses the return code to define when the task has changed
+- name: Authorized key
+  hosts: vps
+  tasks:
+   - name: Set authorized key
+     ansible.posix.authorized_key:
+      user: root
+      state: present
+      key: "{{ lookup('file', '/home/root/.ssh/id_ed25519.pub') }}"

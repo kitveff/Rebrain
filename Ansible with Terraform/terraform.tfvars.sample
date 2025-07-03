@@ -1,0 +1,8 @@
+do_token = "Your Digital Ocen Token"
+user_email = "ur email"
+task_name = "ur task"
+login = "ur login"
+aws_access = "ur aws access key"
+aws_secret_key = "ur aws secret key"
+vps_passwd = "vps password"
+vps_user = "vps user"

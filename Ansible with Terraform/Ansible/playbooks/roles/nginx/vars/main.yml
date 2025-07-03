@@ -1,0 +1,6 @@
+---
+# vars file for nginx
+nginx_mode: "conf.d"
+nginx_vhosts:
+  - vhost1
+  - vhost2

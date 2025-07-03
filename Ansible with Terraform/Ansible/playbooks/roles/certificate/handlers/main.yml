@@ -1,0 +1,10 @@
+---
+# handlers file for certificate
+- name: Reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+- name: Restart nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted

@@ -1,0 +1,6 @@
+all:
+  children:
+    do_vps:
+      hosts:
+        vps:
+          ansible_host: 192.81.219.126

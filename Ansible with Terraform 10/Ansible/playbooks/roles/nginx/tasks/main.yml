@@ -1,0 +1,28 @@
+---
+# tasks file for nginx
+- name: Install Nginx on CentOS
+  ansible.builtin.include_tasks: "install_for_centos.yml"
+  when: ansible_distribution == 'CentOS'
+
+- name: Install Nginx on Ubuntu
+  ansible.builtin.include_tasks: "install_for_ubuntu.yml"
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Run nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Generate main config
+  template:
+    src: "nginx.conf.j2"
+    dest: "/etc/nginx/nginx.conf"
+
+- name: Load conf files
+  vars: 
+    ssl: false
+  template:
+    src: virtualhosts.conf.j2
+    dest: /etc/nginx/conf.d/vhost.conf
+  notify: Reload nginx

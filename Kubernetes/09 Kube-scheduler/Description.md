@@ -3,44 +3,26 @@
 ## Задание
 
 ```
-Создайте deployment с именем nginx-ds в namespace default c образом nginx:alpine3.17 и количеством реплик 3.
-Поставьте на паузу rollout.
-Примените обновление (поменяйте образ на nginx:alpine3.18).
-Изучите выводы команд (kubectl describe).
-Включите rollout.
-Изучите выводы команд (kubectl describe).
+Создайте deployment с именем my-app, классом guaranteed и количеством реплик – 3. Все поды должны заехать на третью ноду.
+Скорее всего, вы столкнётесь с ошибками размещения подов на третьей ноде. Устраните эти проблемы, так чтобы любой под мог на неё заехать (2 штуки)
 
 ```
 
 # Steps:
 
 ```sh
-#Создание Deployment
-kubectl create deployment nginx-ds --image=nginx:alpine3.17 --replicas=3 -n default
+# Добавляем taint (запрещаем все поды, кроме тех, у которых есть toleration)
+kubectl taint nodes kuberorc-v3-6-3-lngzz dedicated=third-node:NoSchedule
 
-#Проверка созданного Deployment
-kubectl get deployment nginx-ds -n default
-kubectl get pods -n default -l app=nginx-ds
+# Добавляем label (чтобы удобнее было выбирать ноду)
+kubectl label nodes kuberorc-v3-6-3-lngzz dedicated=third-node
 
-#Постановка rollout на паузу
-kubectl rollout pause deployment/nginx-ds -n default
+nano my-app-deployment.yml
 
-#Обновление образа
-kubectl set image deployment/nginx-ds nginx=nginx:alpine3.18 -n default
+kubectl apply -f my-app-deployment.yml
 
-#Изучение состояния Deployment
-kubectl describe deployment nginx-ds -n default
+#Смотрим события 
+kubectl get events --sort-by='.metadata.creationTimestamp'
 
-#Возобновление rollout
-kubectl rollout resume deployment/nginx-ds -n default
-
-#Проверка завершения обновления
-kubectl rollout status deployment/nginx-ds -n default
-
-#Изучение обновленного Deployment
-kubectl describe deployment nginx-ds -n default
-
-#образ в Pods
-kubectl describe pods -n default -l app=nginx-ds | grep Image:
 
 ```

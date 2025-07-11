@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+      tolerations:  # Разрешаем размещение на заtainted ноде
+      - key: "dedicated"
+        operator: "Equal"
+        value: "third-node"
+        effect: "NoSchedule"
+      affinity:  # Жёстко привязываем к третьей ноде
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - kuberorc-v3-6-3-lngzz
+        podAntiAffinity:  # Ограничиваем 1 под на ноду (но это можно настроить)
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - my-app
+            topologyKey: "kubernetes.io/hostname"

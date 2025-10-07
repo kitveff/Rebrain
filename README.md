@@ -1,7 +1,3 @@
-# 💫 About Me:
-I'm 28. I'm from St. Petersburg.<br>🔭 I'm currently working at MTS.<br>🌱 I'm learning a DevOps course from Rebrain.
-
-
 ## 🌐 Socials:
 [![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?logo=Instagram&logoColor=white)](https://instagram.com/@kitaeff) [![email](https://img.shields.io/badge/Email-D14836?logo=gmail&logoColor=white)](mailto:kitveff@gmail.com) 
 

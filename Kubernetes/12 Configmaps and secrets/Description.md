@@ -20,14 +20,76 @@
 
 ```sh
 
+#Создание imagePullSecret
+
 kubectl create secret docker-registry regcred \
   --docker-server=registry.rebrainme.com \
   --docker-username=pull-creds \
-  --docker-password=gldt-LUE7NKmJu3F55r_fxsZC
+  --docker-password=gldt-9J9ys4uZR9C4CvWjR71F
+
+# Получаем nginx.conf из существующего пода (если есть)
+# kubectl exec <pod-name> -- cat /etc/nginx/nginx.conf > nginx.conf
+
+# Создаем файл nginx.conf с worker_processes 4
+cat > nginx.conf << EOF
+worker_processes 4;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    sendfile on;
+    keepalive_timeout 65;
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+            root /usr/share/nginx/html;
+        }
+    }
+}
+EOF
+
+# Создаем ConfigMap
+kubectl create configmap nginx-config --from-file=nginx.conf=./nginx.conf
+
+
+#Создание Secret с типом basic-auth
+
+kubectl create secret generic creds \
+  --type=kubernetes.io/basic-auth \
+  --from-literal=username=rebrain \
+  --from-literal=password=secret
 
 nano nginx-pod.yaml
 
 kubectl apply -f nginx-pod.yaml
 
+# Проверяем статус пода
+kubectl get pod nginx
+
+# Проверяем переменные окружения (особенно MY_NODE)
+kubectl exec nginx -- env | grep -E "COOL_USER|COOL_PASSWORD|MY_NODE|MY_POD"
+
+# Проверяем конфигурацию nginx
+kubectl exec nginx -- cat /etc/nginx/nginx.conf
+
+# Проверяем downwardAPI файлы
+kubectl exec nginx -- ls -la /etc/pod-info/
+kubectl exec nginx -- cat /etc/pod-info/pod-name
+kubectl exec nginx -- cat /etc/pod-info/pod-namespace
+kubectl exec nginx -- cat /etc/pod-info/labels
 
 ```
